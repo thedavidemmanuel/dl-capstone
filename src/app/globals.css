@@ -24,3 +24,8 @@ body {
 .progress-bar {
   transition: width 0.3s ease-in-out;
 }
+
+.progress-bar-fill {
+  width: var(--progress-width, 0%);
+  transition: width 0.3s ease-in-out;
+}

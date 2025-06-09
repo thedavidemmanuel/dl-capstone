@@ -313,9 +313,7 @@ export default function DocumentsPage() {
                         </span>
                       </label>
                     </div>
-                  )}
-
-                  {/* Upload Progress */}
+                  )}                  {/* Upload Progress */}
                   {progress !== undefined && progress < 100 && (
                     <div className="border rounded-lg p-4 bg-blue-50">
                       <div className="flex items-center mb-2">
