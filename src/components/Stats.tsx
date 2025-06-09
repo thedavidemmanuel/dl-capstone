@@ -20,7 +20,7 @@ const Stats: React.FC = () => {
           {stats.map(({ value, subtitle }, idx) => (
             <div 
               key={idx}
-              className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1"
+              className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 flex flex-col items-center text-center mx-auto w-full max-w-[280px] sm:max-w-none"
             >
               <div className="font-inter font-bold text-4xl bg-gradient-to-r from-[#2C8E5D] to-[#144CBB] bg-clip-text text-transparent mb-3">
                 {value}

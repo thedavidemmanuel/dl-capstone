@@ -21,14 +21,14 @@ export default function Process() {
         </div>
 
         {/* Steps with connector */}
-        <div className="relative flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+        <div className="relative flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-8">
           {/* Horizontal connector line */}
           <div className="hidden lg:block absolute inset-0 top-1/2 h-px bg-gradient-to-r from-[#2C8E5D] to-[#144CBB]"></div>
 
           {steps.map((step, idx) => {
             const Icon = step.icon;
             return (
-              <div key={idx} className="relative z-10 flex-1 flex flex-col items-center">
+              <div key={idx} className="relative z-10 flex-1 flex flex-col items-center w-full max-w-[280px] mx-auto lg:mx-0">
                 {/* Aligned Number Bubble */}
                 <div className="h-16 flex items-center justify-center mb-4">
                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#2C8E5D] to-[#144CBB] flex items-center justify-center shadow-lg">
