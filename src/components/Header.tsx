@@ -2,22 +2,36 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCarSide, faGlobe } from '@fortawesome/free-solid-svg-icons';
+import { faCarSide, faGlobe, faUser, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 import { useLanguage, Language } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Header: React.FC = () => {
   const { language, setLanguage } = useLanguage();
+  const { user, signOut } = useAuth();
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) =>
     setLanguage(e.target.value as Language);
 
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+    
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuOpen && !(event.target as Element)?.closest('.user-menu-container')) {
+        setUserMenuOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [userMenuOpen]);
 
   const headerBg = scrolled
     ? 'bg-white/90 backdrop-blur-md shadow-md'
@@ -51,18 +65,51 @@ const Header: React.FC = () => {
             </Link>
             <Link href="/apply" className="font-inter font-medium text-sm text-black hover:text-[#2C8E5D]">
               Apply for License
-            </Link>
-            <Link href="/verify" className="font-inter font-medium text-sm text-black hover:text-[#2C8E5D]">
+            </Link>            <Link href="/verify" className="font-inter font-medium text-sm text-black hover:text-[#2C8E5D]">
               Verify License
             </Link>
-            
-            {/* Desktop Login Button */}
-            <Link
-              href="/login"
-              className="bg-[#2C8E5D] hover:bg-[#245A47] text-white font-inter font-medium px-5 py-2 rounded-full shadow-sm hover:shadow transition-all"
-            >
-              Login
-            </Link>
+              {/* Desktop Auth Section */}
+            {user ? (
+              <div className="relative user-menu-container">                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full transition-all"
+                >
+                  <div className="w-8 h-8 bg-[#2C8E5D] rounded-full flex items-center justify-center">
+                    <FontAwesomeIcon icon={faUser} className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="font-inter font-medium text-sm text-black">{user.name}</span>
+                </button>
+                
+                {userMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <p className="font-inter font-medium text-sm text-gray-900">{user.name}</p>
+                      <p className="font-inter text-xs text-gray-500">{user.email}</p>
+                    </div>
+                    <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-inter">
+                      Profile
+                    </Link>
+                    <Link href="/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-inter">
+                      Dashboard
+                    </Link>
+                    <button
+                      onClick={signOut}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-inter flex items-center space-x-2"
+                    >
+                      <FontAwesomeIcon icon={faSignOutAlt} className="w-4 h-4" />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                href="/auth"
+                className="bg-[#2C8E5D] hover:bg-[#245A47] text-white font-inter font-medium px-5 py-2 rounded-full shadow-sm hover:shadow transition-all"
+              >
+                Login
+              </Link>
+            )}
           </div>
 
           {/* Language & Mobile Menu Toggle */}
@@ -87,13 +134,11 @@ const Header: React.FC = () => {
               </div>
             </div>
 
-            {/* Mobile Menu Toggle */}
-            <button
+            {/* Mobile Menu Toggle */}            <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-800 hover:text-[#2C8E5D] hover:bg-gray-100 focus:outline-none"
               aria-controls="mobile-menu"
-              aria-expanded={mobileMenuOpen ? "true" : "false"}
             >
               <span className="sr-only">Open main menu</span>
               <svg
@@ -137,18 +182,45 @@ const Header: React.FC = () => {
             </Link>
             <Link href="/apply" className="block px-4 py-2 text-base font-medium text-black hover:text-[#2C8E5D] hover:bg-gray-50 rounded-md">
               Apply for License
-            </Link>
-            <Link href="/verify" className="block px-4 py-2 text-base font-medium text-black hover:text-[#2C8E5D] hover:bg-gray-50 rounded-md">
+            </Link>            <Link href="/verify" className="block px-4 py-2 text-base font-medium text-black hover:text-[#2C8E5D] hover:bg-gray-50 rounded-md">
               Verify License
             </Link>
             
-            {/* Mobile Login Button */}
-            <Link
-              href="/login"
-              className="block w-full mt-3 px-4 py-2 bg-[#2C8E5D] hover:bg-[#245A47] text-center text-white font-medium rounded-md"
-            >
-              Login
-            </Link>
+            {/* Mobile Auth Section */}
+            {user ? (
+              <div className="mt-3 px-4 py-2 border-t border-gray-200">
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="w-10 h-10 bg-[#2C8E5D] rounded-full flex items-center justify-center">
+                    <FontAwesomeIcon icon={faUser} className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-inter font-medium text-black">{user.name}</p>
+                    <p className="font-inter text-sm text-gray-500">{user.email}</p>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Link href="/profile" className="block px-4 py-2 text-base font-medium text-black hover:text-[#2C8E5D] hover:bg-gray-50 rounded-md">
+                    Profile
+                  </Link>
+                  <Link href="/dashboard" className="block px-4 py-2 text-base font-medium text-black hover:text-[#2C8E5D] hover:bg-gray-50 rounded-md">
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={signOut}
+                    className="block w-full text-left px-4 py-2 text-base font-medium text-red-600 hover:bg-red-50 rounded-md"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <Link
+                href="/auth"
+                className="block w-full mt-3 px-4 py-2 bg-[#2C8E5D] hover:bg-[#245A47] text-center text-white font-medium rounded-md"
+              >
+                Login
+              </Link>
+            )}
           </div>
         </div>
       </div>
