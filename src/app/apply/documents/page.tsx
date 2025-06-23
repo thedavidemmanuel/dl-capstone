@@ -14,7 +14,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApplication, type DocumentInfo } from '@/contexts/ApplicationContext';
-import { ApplicationSteps, ApplicationHeader, LoadingSpinner } from '../components/ApplicationShared';
+import { ApplicationSteps, LoadingSpinner } from '../components/ApplicationShared';
 
 interface DocumentRequirement {
   key: keyof DocumentInfo;
@@ -231,14 +231,8 @@ export default function DocumentsPage() {
     const mb = bytes / (1024 * 1024);
     return `${mb.toFixed(1)} MB`;
   };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <ApplicationHeader 
-        userName={user.name} 
-        onDashboardClick={() => router.push('/dashboard')} 
-      />
-
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <ApplicationSteps currentStep={3} />
 

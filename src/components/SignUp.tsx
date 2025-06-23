@@ -105,14 +105,13 @@ const SignUp: React.FC<SignUpProps> = ({ onSwitchToSignIn }) => {
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
             Full Name
-          </label>
-          <input
+          </label>          <input
             id="name"
             name="name"
             type="text"
             value={formData.name}
             onChange={handleInputChange}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2C8E5D] focus:border-transparent transition-all duration-200 font-inter"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2C8E5D] focus:border-transparent transition-all duration-200 font-inter text-gray-900 placeholder-gray-500"
             placeholder="Enter your full name"
             disabled={isLoading}
           />
@@ -121,14 +120,13 @@ const SignUp: React.FC<SignUpProps> = ({ onSwitchToSignIn }) => {
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
             Email Address
-          </label>
-          <input
+          </label>          <input
             id="email"
             name="email"
             type="email"
             value={formData.email}
             onChange={handleInputChange}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2C8E5D] focus:border-transparent transition-all duration-200 font-inter"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2C8E5D] focus:border-transparent transition-all duration-200 font-inter text-gray-900 placeholder-gray-500"
             placeholder="Enter your email"
             disabled={isLoading}
           />
@@ -138,17 +136,16 @@ const SignUp: React.FC<SignUpProps> = ({ onSwitchToSignIn }) => {
           <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
             Password
           </label>
-          <div className="relative">
-            <input
+          <div className="relative">            <input
               id="password"
               name="password"
               type={showPassword ? 'text' : 'password'}
               value={formData.password}
               onChange={handleInputChange}
-              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2C8E5D] focus:border-transparent transition-all duration-200 font-inter"
+              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2C8E5D] focus:border-transparent transition-all duration-200 font-inter text-gray-900 placeholder-gray-500"
               placeholder="Create a password"
               disabled={isLoading}
-            />            <button
+            /><button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
@@ -184,17 +181,16 @@ const SignUp: React.FC<SignUpProps> = ({ onSwitchToSignIn }) => {
           <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
             Confirm Password
           </label>
-          <div className="relative">
-            <input
+          <div className="relative">            <input
               id="confirmPassword"
               name="confirmPassword"
               type={showConfirmPassword ? 'text' : 'password'}
               value={formData.confirmPassword}
               onChange={handleInputChange}
-              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2C8E5D] focus:border-transparent transition-all duration-200 font-inter"
+              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2C8E5D] focus:border-transparent transition-all duration-200 font-inter text-gray-900 placeholder-gray-500"
               placeholder="Confirm your password"
               disabled={isLoading}
-            />            <button
+            /><button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"

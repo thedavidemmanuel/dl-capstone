@@ -1,11 +1,14 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { type NationalIdData } from '@/services/eSignetService';
 
 interface User {
   id: string;
   email: string;
   name: string;
-  provider: 'email' | 'google';
+  provider: 'email' | 'google' | 'national-id';
+  nationalId?: string;
+  nationalIdData?: NationalIdData;
 }
 
 interface AuthContextType {
@@ -14,6 +17,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  signInWithNationalId: (nationalIdData: NationalIdData) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -102,8 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  };
-  const signInWithGoogle = async () => {
+  };  const signInWithGoogle = async () => {
     setIsLoading(true);
     try {
       // Simulate Google OAuth
@@ -125,6 +128,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signInWithNationalId = async (nationalIdData: NationalIdData) => {
+    setIsLoading(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const mockUser: User = {
+        id: nationalIdData.nationalId,
+        email: nationalIdData.email || `${nationalIdData.nationalId}@gov.bi`,
+        name: nationalIdData.fullName,
+        provider: 'national-id',
+        nationalId: nationalIdData.nationalId,
+        nationalIdData
+      };
+      
+      setUser(mockUser);
+      localStorage.setItem('user', JSON.stringify(mockUser));
+    } catch {
+      throw new Error('National ID authentication failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const signOut = async () => {
     setUser(null);
     localStorage.removeItem('user');
@@ -137,6 +163,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signIn,
       signUp,
       signInWithGoogle,
+      signInWithNationalId,
       signOut
     }}>
       {children}

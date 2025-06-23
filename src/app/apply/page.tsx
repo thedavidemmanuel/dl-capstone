@@ -11,7 +11,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApplication } from '@/contexts/ApplicationContext';
-import { ApplicationSteps, ApplicationHeader, LoadingSpinner } from './components/ApplicationShared';
+import { ApplicationSteps, LoadingSpinner } from './components/ApplicationShared';
 
 export default function ApplyPage() {
   const { user, isLoading } = useAuth();
@@ -73,7 +73,9 @@ export default function ApplyPage() {
     if (selectedLicenseType) {
       console.log('Updating license type and navigating...');
       updateLicenseType(selectedLicenseType);
-      const targetUrl = `/apply/personal-info?type=${selectedLicenseType}`;
+      
+      // Navigate to National ID verification page first
+      const targetUrl = `/apply/national-id-verification?type=${selectedLicenseType}`;
       console.log('Navigating to:', targetUrl);
       
       // Use router.push for navigation
@@ -82,15 +84,8 @@ export default function ApplyPage() {
       console.log('No license type selected');
       alert('Please select a license type before continuing');
     }
-  };
-  return (
+  };return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header */}
-      <ApplicationHeader 
-        userName={user.name} 
-        onDashboardClick={() => router.push('/dashboard')} 
-      />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Progress Steps */}
         <ApplicationSteps currentStep={1} />
@@ -180,7 +175,7 @@ export default function ApplyPage() {
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                 >
-                  <span>Continue to Personal Information</span>
+                  <span>Continue to Identity Verification</span>
                   <FontAwesomeIcon icon={faArrowRight} className="w-4 h-4" />
                 </button>
               </div>

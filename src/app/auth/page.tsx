@@ -4,12 +4,15 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCarSide } from '@fortawesome/free-solid-svg-icons';
 import SignIn from '@/components/SignIn';
 import SignUp from '@/components/SignUp';
+import NationalIdAuth from '@/components/NationalIdAuth';
 import { useAuth } from '@/contexts/AuthContext';
+import { type NationalIdData } from '@/services/eSignetService';
+
+type AuthMode = 'signin' | 'signup' | 'national-id';
 
 export default function AuthPage() {
-  const [isSignUp, setIsSignUp] = useState(false);
-  const { user, isLoading } = useAuth();
-  // Show loading while checking authentication
+  const [authMode, setAuthMode] = useState<AuthMode>('signin');
+  const { user, isLoading, signInWithNationalId } = useAuth();  // Show loading while checking authentication
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -26,6 +29,37 @@ export default function AuthPage() {
     return null;
   }
 
+  const handleNationalIdSuccess = async (nationalIdData: NationalIdData) => {
+    try {
+      await signInWithNationalId(nationalIdData);
+    } catch (error) {
+      console.error('National ID sign-in failed:', error);
+    }
+  };
+
+  const renderAuthComponent = () => {
+    switch (authMode) {
+      case 'national-id':
+        return (
+          <NationalIdAuth
+            onSuccess={handleNationalIdSuccess}
+            onBack={() => setAuthMode('signin')}
+          />
+        );
+      case 'signup':
+        return (
+          <SignUp onSwitchToSignIn={() => setAuthMode('signin')} />
+        );
+      default:
+        return (
+          <SignIn 
+            onSwitchToSignUp={() => setAuthMode('signup')}
+            onSwitchToNationalId={() => setAuthMode('national-id')}
+          />
+        );
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -41,11 +75,13 @@ export default function AuthPage() {
         </div>
 
         {/* Auth form card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
-          {isSignUp ? (
-            <SignUp onSwitchToSignIn={() => setIsSignUp(false)} />
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-200">
+          {authMode === 'national-id' ? (
+            renderAuthComponent()
           ) : (
-            <SignIn onSwitchToSignUp={() => setIsSignUp(true)} />
+            <div className="p-8">
+              {renderAuthComponent()}
+            </div>
           )}
         </div>
 
