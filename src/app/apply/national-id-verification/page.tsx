@@ -11,15 +11,15 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useApplication } from '@/contexts/ApplicationContext';
 import { ApplicationSteps, LoadingSpinner } from '../components/ApplicationShared';
-import NationalIdAuth from '@/components/NationalIdAuth';
-import { type NationalIdData } from '@/services/eSignetService';
+import NationalIdAuth from '@/components/NationalIdAuthSimple';
+import { type CitizenData } from '@/services/supabaseAuth';
 
 export default function NationalIdVerificationPage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const { applicationData, updatePersonalInfo, setCurrentStep } = useApplication();
   const [verificationComplete, setVerificationComplete] = useState(false);
-  const [verifiedData, setVerifiedData] = useState<NationalIdData | null>(null);
+  const [verifiedData, setVerifiedData] = useState<CitizenData | null>(null);
 
   useEffect(() => {
     setCurrentStep(1.5); // Between license selection and personal info
@@ -40,12 +40,13 @@ export default function NationalIdVerificationPage() {
     router.push('/apply');
     return <LoadingSpinner message="Redirecting..." />;
   }
-  const handleVerificationSuccess = (nationalIdData: NationalIdData) => {
-    setVerifiedData(nationalIdData);
+  
+  const handleVerificationSuccess = (citizenData: CitizenData) => {
+    setVerifiedData(citizenData);
     setVerificationComplete(true);
 
     // Parse full name into first and last name
-    const nameParts = nationalIdData.fullName.split(' ');
+    const nameParts = citizenData.fullName.split(' ');
     const firstName = nameParts[0] || '';
     const lastName = nameParts.slice(1).join(' ') || '';
 
@@ -53,15 +54,15 @@ export default function NationalIdVerificationPage() {
     updatePersonalInfo({
       firstName,
       lastName,
-      dateOfBirth: nationalIdData.dateOfBirth,
-      nationalId: nationalIdData.nationalId,
-      phoneNumber: nationalIdData.phoneNumber,
-      email: nationalIdData.email || '',
+      dateOfBirth: citizenData.dateOfBirth,
+      nationalId: citizenData.nationalId,
+      phoneNumber: citizenData.phoneNumber,
+      email: citizenData.email || '',
       address: {
         province: '',
         commune: '',
         zone: '',
-        street: nationalIdData.address
+        street: citizenData.address
       },
       emergencyContact: {
         name: '',
@@ -127,8 +128,10 @@ export default function NationalIdVerificationPage() {
               {/* National ID Auth Component */}
               <div className="flex justify-center">
                 <NationalIdAuth
+                  key="apply-flow-national-id" // Force fresh component mount
                   onSuccess={handleVerificationSuccess}
                   onBack={handleBack}
+                  isLoading={false} 
                 />
               </div>
 

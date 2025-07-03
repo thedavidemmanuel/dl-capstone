@@ -1,6 +1,15 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { type NationalIdData } from '@/services/eSignetService';
+
+// Define a simplified interface for National ID data
+interface NationalIdData {
+  nationalId: string;
+  fullName: string;
+  dateOfBirth: string;
+  address: string;
+  phoneNumber: string;
+  email?: string;
+}
 
 interface User {
   id: string;

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faIdCard, 
@@ -10,10 +10,10 @@ import {
   faCheckCircle,
   faExclamationTriangle
 } from '@fortawesome/free-solid-svg-icons';
-import { eSignetService, type NationalIdData } from '@/services/eSignetService';
+import { supabaseAuthService, type CitizenData } from '@/services/supabaseAuth';
 
 interface NationalIdAuthProps {
-  onSuccess: (userData: NationalIdData) => void;
+  onSuccess: (userData: CitizenData) => void;
   onBack: () => void;
   isLoading?: boolean;
 }
@@ -26,51 +26,163 @@ export default function NationalIdAuth({ onSuccess, onBack, isLoading = false }:
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  
+  // Ref for the submit button to control its state
+  const submitButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Debug component mount and initial state
+  useEffect(() => {
+    console.log('🏗️ NationalIdAuth component mounted with props:', { isLoading });
+    console.log('🏗️ Initial state:', { step, nationalId, loading, error, success });
+    
+    // Force blur any focused elements and reset button state
+    setTimeout(() => {
+      if (submitButtonRef.current) {
+        submitButtonRef.current.blur();
+        console.log('🔄 Button blurred on mount');
+      }
+      // Also blur any other focused elements
+      if (document.activeElement && document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+    }, 100);
+    
+    console.log('🔄 Component mounted and state initialized');
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // For debugging loading state
+  useEffect(() => {
+    console.log('⚠️ Loading state changed:', loading);
+  }, [loading]);
+
+  // Debug when button disabled state might change
+  useEffect(() => {
+    const isValidLength = nationalId.length === 13;
+    const buttonDisabled = !nationalId || !isValidLength || loading || isLoading;
+    console.log('🔴 Button disabled state check:', {
+      nationalId: nationalId,
+      nationalIdLength: nationalId.length,
+      hasNationalId: !!nationalId,
+      isValidLength: isValidLength,
+      is13Digits: nationalId.length === 13,
+      loading: loading,
+      isLoading: isLoading,
+      buttonDisabled: buttonDisabled
+    });
+  }, [nationalId, loading, isLoading]);
+
+  // Reset loading state when component unmounts
+  useEffect(() => {
+    return () => {
+      setLoading(false);
+    };
+  }, []);
 
   const validateNationalId = (id: string): boolean => {
-    // Burundi National ID format: 16 digits
-    const burundianIdPattern = /^\d{16}$/;
-    return burundianIdPattern.test(id);
+    // Clean the input - remove any whitespace
+    const cleanId = id.trim().replace(/\s+/g, '');
+    console.log('Validating National ID:', cleanId, 'Length:', cleanId.length);
+    
+    // Burundi National ID format: Accept 13-digit format (as per setup.sql)
+    // Example: 1198700123456 (13 digits)
+    const burundianIdPattern = /^\d{13}$/;
+    const isValid = burundianIdPattern.test(cleanId);
+    console.log('Validation result:', isValid, '(expecting 13 digits)');
+    return isValid;
   };
 
   const handleIdSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateNationalId(nationalId)) {
-      setError('Please enter a valid 16-digit National ID number');
+    // Clean the national ID input
+    const cleanNationalId = nationalId.trim().replace(/\s+/g, '');
+    console.log('Submitting National ID:', cleanNationalId);
+    
+    if (!validateNationalId(cleanNationalId)) {
+      setError('Please enter a valid 13-digit National ID number');
       return;
     }
 
+    // Debug the API configuration
+    console.log('🌐 Backend API URL being used:', process.env.NEXT_PUBLIC_BACKEND_API_URL);
+    console.log('🌐 Environment:', process.env.NODE_ENV);
+
+    // Explicitly start loading
+    console.log('🔄 Setting loading state to TRUE');
+    setNationalId(cleanNationalId); // Update state with clean value
     setLoading(true);
     setError('');
+    setSuccess('');
+
+    let authTxnId = '';
 
     try {
-      // Step 1: Initiate authentication
-      const authResult = await eSignetService.initiateAuth(nationalId);
+      // STEP 1: Initiate auth
+      console.log('STEP 1: Initiating authentication');
+      const authResult = await eSignetService.initiateAuth(cleanNationalId);
+      console.log('Auth result:', authResult);
       
       if (!authResult.success) {
-        setError(authResult.message);
+        console.log('❌ Auth initiation failed:', authResult.message);
+        setError(authResult.message || 'Authentication failed');
+        console.log('🔄 Setting loading state to FALSE - Auth initiation failed');
         setLoading(false);
         return;
       }
 
-      // Step 2: Send OTP
-      const otpResult = await eSignetService.sendOtp({
-        nationalId,
-        transactionId: authResult.transactionId!
-      });
-
-      if (otpResult.success) {
-        setTransactionId(otpResult.transactionId!);
-        setStep('otp-verification');
-        setSuccess('OTP sent to your registered phone number');
-      } else {
-        setError(otpResult.message);
+      if (!authResult.transactionId) {
+        console.error('❌ Missing transaction ID in auth result:', authResult);
+        setError('Authentication failed: Missing transaction ID');
+        console.log('🔄 Setting loading state to FALSE - Missing transaction ID');
+        setLoading(false);
+        return;
       }
+
+      authTxnId = authResult.transactionId;
+
+      // STEP 2: Send OTP
+      console.log('STEP 2: Sending OTP, txn:', authTxnId);
+      const otpResult = await eSignetService.sendOtp({
+        nationalId: cleanNationalId,
+        transactionId: authTxnId
+      });
+      console.log('OTP result:', otpResult);
+      
+      if (!otpResult.success) {
+        console.log('❌ OTP sending failed:', otpResult.message);
+        setError(otpResult.message || 'Failed to send OTP');
+        console.log('🔄 Setting loading state to FALSE - OTP sending failed');
+        setLoading(false);
+        return;
+      }
+      
+      // SUCCESS - Switch to OTP screen
+      const finalTxnId = otpResult.transactionId || authTxnId;
+      console.log('✅ Auth flow successful, transaction ID:', finalTxnId);
+      setTransactionId(finalTxnId);
+      setStep('otp-verification');
+      setSuccess('OTP sent to your registered phone number');
+      
     } catch (error) {
-      setError('Network error. Please check your connection and try again.');
-      console.error('Auth error:', error);
+      console.error('Auth flow error:', error);
+      console.error('Error details:', {
+        type: error?.constructor?.name,
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      
+      // More specific error message
+      let errorMessage = 'Connection error. Please try again.';
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        errorMessage = 'Cannot connect to backend server. Please check if the server is running on port 8090.';
+      } else if (error instanceof Error) {
+        errorMessage = `Backend error: ${error.message}`;
+      }
+      
+      setError(errorMessage);
     } finally {
+      // Always reset loading state
+      console.log('🔄 Setting loading state to FALSE - Finally block');
       setLoading(false);
     }
   };
@@ -83,26 +195,36 @@ export default function NationalIdAuth({ onSuccess, onBack, isLoading = false }:
       return;
     }
 
+    console.log('🔄 Starting OTP verification, setting loading state to TRUE');
     setLoading(true);
     setError('');
 
     try {
+      console.log('Verifying OTP:', { nationalId, otp, transactionId });
       const verifyResult = await eSignetService.verifyOtp({
-        nationalId,
+        nationalId: nationalId.trim().replace(/\s+/g, ''), // Clean the ID for verification too
         otp,
         transactionId
       });
 
+      console.log('OTP verification result:', verifyResult);
+
       if (verifyResult.success && verifyResult.userData) {
         setSuccess('Authentication successful!');
+        // Reset loading before calling onSuccess to prevent UI issues
+        console.log('🔄 Setting loading state to FALSE - OTP verification succeeded');
+        setLoading(false);
         onSuccess(verifyResult.userData);
       } else {
-        setError(verifyResult.message);
+        console.log('❌ OTP verification failed:', verifyResult.message);
+        setError(verifyResult.message || 'OTP verification failed');
+        console.log('🔄 Setting loading state to FALSE - OTP verification failed');
+        setLoading(false);
       }
     } catch (error) {
-      setError('Network error. Please check your connection and try again.');
       console.error('OTP verification error:', error);
-    } finally {
+      setError('Network error. Please check your connection and try again.');
+      console.log('🔄 Setting loading state to FALSE - OTP verification error');
       setLoading(false);
     }
   };
@@ -112,6 +234,15 @@ export default function NationalIdAuth({ onSuccess, onBack, isLoading = false }:
     setOtp('');
     setError('');
     setSuccess('');
+  };
+
+  const resetState = () => {
+    console.log('🔄 Manually resetting component state');
+    setLoading(false);
+    setError('');
+    setSuccess('');
+    setStep('id-entry');
+    setOtp('');
   };
 
   return (
@@ -150,6 +281,23 @@ export default function NationalIdAuth({ onSuccess, onBack, isLoading = false }:
           <span>National ID</span>
           <span>OTP Verification</span>
         </div>
+        
+        {/* Debug info */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-2 flex justify-center">
+            <span className="bg-blue-50 text-blue-800 text-xs px-2 py-1 rounded-full">
+              Loading state: {loading ? 'TRUE' : 'FALSE'}
+            </span>
+            {loading && (
+              <button 
+                onClick={resetState}
+                className="ml-2 bg-red-50 text-red-800 text-xs px-2 py-1 rounded-full"
+              >
+                Reset State
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Error Message */}
@@ -170,7 +318,10 @@ export default function NationalIdAuth({ onSuccess, onBack, isLoading = false }:
 
       {/* National ID Entry Form */}
       {step === 'id-entry' && (
-        <form onSubmit={handleIdSubmit} className="space-y-4">
+        <form onSubmit={(e) => {
+          console.log('🚀 FORM SUBMISSION TRIGGERED!');
+          handleIdSubmit(e);
+        }} className="space-y-4">
           <div>
             <label htmlFor="nationalId" className="block text-sm font-medium text-gray-700 mb-2">
               National ID Number
@@ -183,15 +334,15 @@ export default function NationalIdAuth({ onSuccess, onBack, isLoading = false }:
                 type="text"
                 id="nationalId"
                 value={nationalId}
-                onChange={(e) => setNationalId(e.target.value.replace(/\D/g, '').slice(0, 16))}
-                placeholder="Enter 16-digit National ID"
+                onChange={(e) => setNationalId(e.target.value.replace(/\D/g, '').slice(0, 13))}
+                placeholder="Enter 13-digit National ID"
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
                 disabled={loading || isLoading}
                 required
               />
             </div>
             <p className="mt-1 text-xs text-gray-500">
-              Format: 16 digits (e.g., 1234567890123456)
+              Format: 13 digits (e.g., 1198700123456)
             </p>
           </div>
 
@@ -207,12 +358,38 @@ export default function NationalIdAuth({ onSuccess, onBack, isLoading = false }:
             </button>
 
             <button
+              ref={submitButtonRef}
               type="submit"
-              disabled={!nationalId || loading || isLoading}
-              className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!nationalId || nationalId.length !== 13 || loading || isLoading}
+              className={`flex-1 flex items-center justify-center space-x-2 px-4 py-3 rounded-lg transition-all font-medium ${
+                (!nationalId || nationalId.length !== 13 || loading || isLoading)
+                  ? 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-60'
+                  : 'bg-green-600 hover:bg-green-700 text-white cursor-pointer'
+              }`}
+              onClick={() => {
+                console.log('🔥 SEND OTP BUTTON CLICKED!');
+                console.log('Current nationalId:', nationalId);
+                console.log('Current nationalId length:', nationalId.length);
+                console.log('Loading state:', loading);
+                console.log('isLoading prop:', isLoading);
+                console.log('Has nationalId?', !!nationalId);
+                console.log('Is 13 digits?', nationalId.length === 13);
+                const disabled = !nationalId || nationalId.length !== 13 || loading || isLoading;
+                console.log('Button disabled?', disabled);
+                console.log('Disabled reasons:', {
+                  noNationalId: !nationalId,
+                  invalidLength: nationalId.length !== 13,
+                  loading: loading,
+                  isLoading: isLoading
+                });
+                // Don't prevent default - let the form submission happen
+              }}
             >
               {loading ? (
-                <FontAwesomeIcon icon={faSpinner} className="w-4 h-4 animate-spin" />
+                <div className="flex items-center justify-center space-x-2">
+                  <FontAwesomeIcon icon={faSpinner} className="w-4 h-4 animate-spin" />
+                  <span>Processing...</span>
+                </div>
               ) : (
                 <>
                   <span>Send OTP</span>
@@ -242,7 +419,7 @@ export default function NationalIdAuth({ onSuccess, onBack, isLoading = false }:
               required
             />
             <p className="mt-1 text-xs text-gray-500">
-              For testing, use: <span className="font-mono font-medium">123456</span>
+              Development mode: Any 6-digit code will work for testing
             </p>
           </div>
 
@@ -263,7 +440,10 @@ export default function NationalIdAuth({ onSuccess, onBack, isLoading = false }:
               className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
-                <FontAwesomeIcon icon={faSpinner} className="w-4 h-4 animate-spin" />
+                <div className="flex items-center justify-center space-x-2">
+                  <FontAwesomeIcon icon={faSpinner} className="w-4 h-4 animate-spin" />
+                  <span>Verifying...</span>
+                </div>
               ) : (
                 <>
                   <span>Verify</span>

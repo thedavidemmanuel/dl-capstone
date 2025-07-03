@@ -4,6 +4,7 @@ import "./globals.css";
 import ConditionalLayout from "@/components/ConditionalLayout";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import EnvironmentBanner from "@/components/EnvironmentBanner";
 // Suppress development-only ResizeObserver errors
 import "@/utils/suppressDevErrors";
 
@@ -38,6 +39,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased min-h-screen flex flex-col`}
       >
+        <EnvironmentBanner />
         <AuthProvider>
           <LanguageProvider>
             <ConditionalLayout>

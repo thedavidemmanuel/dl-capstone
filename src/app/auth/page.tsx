@@ -4,9 +4,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCarSide } from '@fortawesome/free-solid-svg-icons';
 import SignIn from '@/components/SignIn';
 import SignUp from '@/components/SignUp';
-import NationalIdAuth from '@/components/NationalIdAuth';
+import NationalIdAuth from '@/components/NationalIdAuthSimple';
 import { useAuth } from '@/contexts/AuthContext';
-import { type NationalIdData } from '@/services/eSignetService';
+import { type CitizenData } from '@/services/supabaseAuth';
 
 type AuthMode = 'signin' | 'signup' | 'national-id';
 
@@ -29,8 +29,17 @@ export default function AuthPage() {
     return null;
   }
 
-  const handleNationalIdSuccess = async (nationalIdData: NationalIdData) => {
+  const handleNationalIdSuccess = async (citizenData: CitizenData) => {
     try {
+      // Convert CitizenData to the format expected by AuthContext
+      const nationalIdData = {
+        nationalId: citizenData.nationalId,
+        fullName: citizenData.fullName,
+        dateOfBirth: citizenData.dateOfBirth,
+        address: citizenData.address,
+        phoneNumber: citizenData.phoneNumber,
+        email: citizenData.email
+      };
       await signInWithNationalId(nationalIdData);
     } catch (error) {
       console.error('National ID sign-in failed:', error);
@@ -42,8 +51,10 @@ export default function AuthPage() {
       case 'national-id':
         return (
           <NationalIdAuth
+            key="auth-flow-national-id" // Force fresh component mount
             onSuccess={handleNationalIdSuccess}
             onBack={() => setAuthMode('signin')}
+            isLoading={false} // Don't inherit global loading state
           />
         );
       case 'signup':
