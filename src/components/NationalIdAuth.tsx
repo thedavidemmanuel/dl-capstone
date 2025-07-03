@@ -27,6 +27,13 @@ export default function NationalIdAuth({ onSuccess, onBack, isLoading = false }:
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
+  // Ensure supabaseAuthService is loaded
+  useEffect(() => {
+    if (supabaseAuthService) {
+      console.log('🔧 NationalIdAuth: Supabase auth service loaded');
+    }
+  }, []);
+  
   // Ref for the submit button to control its state
   const submitButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -119,7 +126,7 @@ export default function NationalIdAuth({ onSuccess, onBack, isLoading = false }:
     try {
       // STEP 1: Initiate auth
       console.log('STEP 1: Initiating authentication');
-      const authResult = await eSignetService.initiateAuth(cleanNationalId);
+      const authResult = await supabaseAuthService.initiateAuth(cleanNationalId);
       console.log('Auth result:', authResult);
       
       if (!authResult.success) {
@@ -140,26 +147,12 @@ export default function NationalIdAuth({ onSuccess, onBack, isLoading = false }:
 
       authTxnId = authResult.transactionId;
 
-      // STEP 2: Send OTP
-      console.log('STEP 2: Sending OTP, txn:', authTxnId);
-      const otpResult = await eSignetService.sendOtp({
-        nationalId: cleanNationalId,
-        transactionId: authTxnId
-      });
-      console.log('OTP result:', otpResult);
-      
-      if (!otpResult.success) {
-        console.log('❌ OTP sending failed:', otpResult.message);
-        setError(otpResult.message || 'Failed to send OTP');
-        console.log('🔄 Setting loading state to FALSE - OTP sending failed');
-        setLoading(false);
-        return;
-      }
+      // STEP 2: In the simplified flow, OTP is automatically "sent" (mocked)
+      console.log('STEP 2: OTP sent (mocked), txn:', authTxnId);
       
       // SUCCESS - Switch to OTP screen
-      const finalTxnId = otpResult.transactionId || authTxnId;
-      console.log('✅ Auth flow successful, transaction ID:', finalTxnId);
-      setTransactionId(finalTxnId);
+      console.log('✅ Auth flow successful, transaction ID:', authTxnId);
+      setTransactionId(authTxnId);
       setStep('otp-verification');
       setSuccess('OTP sent to your registered phone number');
       
@@ -201,20 +194,20 @@ export default function NationalIdAuth({ onSuccess, onBack, isLoading = false }:
 
     try {
       console.log('Verifying OTP:', { nationalId, otp, transactionId });
-      const verifyResult = await eSignetService.verifyOtp({
-        nationalId: nationalId.trim().replace(/\s+/g, ''), // Clean the ID for verification too
+      const verifyResult = await supabaseAuthService.verifyOtp(
+        nationalId.trim().replace(/\s+/g, ''), // Clean the ID for verification too
         otp,
         transactionId
-      });
+      );
 
       console.log('OTP verification result:', verifyResult);
 
-      if (verifyResult.success && verifyResult.userData) {
+      if (verifyResult.success && verifyResult.citizenData) {
         setSuccess('Authentication successful!');
         // Reset loading before calling onSuccess to prevent UI issues
         console.log('🔄 Setting loading state to FALSE - OTP verification succeeded');
         setLoading(false);
-        onSuccess(verifyResult.userData);
+        onSuccess(verifyResult.citizenData);
       } else {
         console.log('❌ OTP verification failed:', verifyResult.message);
         setError(verifyResult.message || 'OTP verification failed');

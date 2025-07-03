@@ -16,6 +16,7 @@
         button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
         button:hover { background: #0056b3; }
         button:disabled { background: #6c757d; cursor: not-allowed; }
+        .test-input { padding: 8px; width: 200px; border: 1px solid #ddd; border-radius: 3px; }
     </style>
 </head>
 <body>
@@ -38,7 +39,7 @@
 
         <div class="test-section">
             <h3>National ID Lookup Test</h3>
-            <input type="text" id="nationalIdInput" placeholder="Enter National ID (e.g., 1234567890123)" style="padding: 8px; width: 200px;">
+            <input type="text" id="nationalIdInput" class="test-input" placeholder="Enter National ID (e.g., 1234567890123)">
             <button onclick="testNationalIdLookup()">Test Lookup</button>
             <div id="lookup-results"></div>
         </div>

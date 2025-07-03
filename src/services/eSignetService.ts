@@ -43,7 +43,8 @@ class ESignetService {
     this.baseUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || 
                    config.BACKEND_API_URL || 
                    'http://localhost:8090/api';
-    this.mockIdentityUrl = process.env.NEXT_PUBLIC_MOCK_IDENTITY_URL || config.MOCK_IDENTITY_URL;
+    // Legacy property - no longer used since we switched to Supabase direct
+    this.mockIdentityUrl = process.env.NEXT_PUBLIC_MOCK_IDENTITY_URL || 'http://localhost:8088';
     this.isMock = config.IS_MOCK;
     
     // Log configuration in development
