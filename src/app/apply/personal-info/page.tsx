@@ -47,7 +47,7 @@ export default function PersonalInfoPage() {
 
   // Handle license type from URL params
   useEffect(() => {
-    const licenseType = searchParams.get('type');
+    const licenseType = searchParams?.get('type');
     if (licenseType && licenseType !== applicationData.licenseType) {
       updateLicenseType(licenseType);
     }

@@ -21,7 +21,7 @@ export const useAuthRedirect = () => {
 
     // Define public (non-protected) routes for unauthenticated users
     const publicRoutes = ['/', '/auth'];
-    const isPublicRoute = publicRoutes.includes(pathname);
+    const isPublicRoute = publicRoutes.includes(pathname || '');
 
     if (!user && !isPublicRoute) {
       // User not authenticated, redirect to auth

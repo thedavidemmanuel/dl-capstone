@@ -347,7 +347,7 @@ export default function NationalIdAuth({ onSuccess, onBack, isLoading = false }:
               className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all font-medium text-gray-700 disabled:opacity-50"
             >
               <FontAwesomeIcon icon={faArrowLeft} className="w-4 h-4" />
-              <span>Back</span>
+              <span>Back</span> 
             </button>
 
             <button

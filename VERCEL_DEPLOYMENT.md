@@ -3,6 +3,11 @@
 ## ✅ Build Fix Applied
 The ESLint error "supabaseAuthService is defined but never used" has been resolved by adding a useEffect that references the service.
 
+## ❌ CURRENT ISSUE: Missing Environment Variables
+The deployment is working but failing at runtime because environment variables are not set in Vercel.
+
+**Error seen:** `NEXT_PUBLIC_SUPABASE_URL is required`
+
 ## 🔧 Required Environment Variables for Vercel
 
 Set these environment variables in your Vercel project settings:

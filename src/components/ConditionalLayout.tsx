@@ -21,7 +21,7 @@ const ConditionalLayout: React.FC<ConditionalLayoutProps> = ({ children }) => {
     
     if (!isLoading) {
       const publicRoutes = ['/', '/auth'];
-      const isPublicRoute = publicRoutes.includes(pathname);
+      const isPublicRoute = publicRoutes.includes(pathname || '');
 
       if (!user && !isPublicRoute) {
         // User not authenticated, redirect to auth
@@ -62,7 +62,7 @@ const ConditionalLayout: React.FC<ConditionalLayoutProps> = ({ children }) => {
   }
     // For unauthenticated users, only show home header/footer on public pages
   const publicPages = ['/', '/auth'];
-  const isPublicPage = publicPages.includes(pathname);
+  const isPublicPage = publicPages.includes(pathname || '');
   
   if (!isPublicPage) {
     // Protected pages for unauthenticated users - show loading while redirect happens
